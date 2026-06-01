@@ -1,0 +1,71 @@
+body {
+  font-family: sans-serif;
+  background: #0f172a;
+  color: #f8fafc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+.card {
+  background: #1e293b;
+  padding: 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #334155;
+}
+.tab {
+  flex: 1;
+  padding: 10px;
+  cursor: pointer;
+  color: #94a3b8;
+}
+.tab.active {
+  color: #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+  font-weight: bold;
+}
+.form-section {
+  display: none;
+}
+.form-section.active {
+  display: block;
+}
+input,
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  box-sizing: border-box;
+}
+input {
+  background: #0f172a;
+  color: white;
+}
+button {
+  background: #3b82f6;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+.btn-passkey {
+  background: transparent;
+  color: #10b981;
+  border: 1px solid #10b981;
+  margin-top: 15px;
+}
+#status {
+  margin-top: 15px;
+  font-weight: bold;
+}

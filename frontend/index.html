@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Portal de Acesso - Passwordless</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="card">
+    <div class="tabs">
+        <div id="t-login" class="tab active" onclick="modo('login')">Entrar</div>
+        <div id="t-cadastro" class="tab" onclick="modo('cadastro')">Cadastrar</div>
+    </div>
+
+    <input type="email" id="email" placeholder="E-mail">
+
+    <button class="btn-passkey" id="btn-pk" onclick="fluxoPasskey()">🔑 Entrar com Passkey</button>
+
+    <div id="status"></div>
+</div>
+
+<script>
+    let tipo = 'login';
+    const statusDiv = document.getElementById('status');
+
+    function modo(alvo) {
+        tipo = alvo;
+        document.getElementById('t-login').classList.toggle('active', alvo === 'login');
+        document.getElementById('t-cadastro').classList.toggle('active', alvo === 'cadastro');
+        
+        if (alvo === 'login') {
+            document.getElementById('btn-pk').innerText = '🔑 Entrar com Passkey';
+        } else {
+            document.getElementById('btn-pk').innerText = '🔑 Cadastrar Passkey';
+        }
+        
+        statusDiv.innerText = "";
+        document.getElementById('email').value = "";
+    }
+
+    window.onload = () => modo('login');
+
+    function msg(t, cor = "var(--accent)") { statusDiv.style.color = cor; statusDiv.innerText = t; }
+
+    async function fluxoPasskey() {
+        const email = document.getElementById('email').value;
+        if (!email) return alert('Por favor, digite seu e-mail.');
+        msg("⏳ Aguardando autenticação do dispositivo...", "var(--primary)");
+
+        try {
+            const rota = tipo === 'cadastro' ? '/api/register' : '/api/login';
+            const res = await fetch(`${rota}/challenge`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email }) });
+            const options = await res.json();
+            if (options.error) return msg("🟥 " + options.error, "var(--error)");
+
+            const paraBinario = (base64String) => {
+                if (!base64String) return new Uint8Array();
+                const pad = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + pad).replace(/-/g, '+').replace(/_/g, '/');
+                const stringBinaria = window.atob(base64);
+                return Uint8Array.from(stringBinaria, c => c.charCodeAt(0));
+            };
+
+            options.challenge = paraBinario(options.challenge);
+            
+            if (tipo === 'cadastro' && options.user) {
+                options.user.id = paraBinario(options.user.id);
+            }
+            
+            if (tipo === 'login' && options.allowCredentials) {
+                options.allowCredentials = options.allowCredentials.map(cred => ({
+                    type: 'public-key',
+                    id: paraBinario(cred.id)
+                }));
+            }
+
+            const cred = tipo === 'cadastro' 
+                ? await navigator.credentials.create({ publicKey: options }) 
+                : await navigator.credentials.get({ publicKey: options });
+
+            let idParaEnviar = cred.id;
+            if (cred.rawId) {
+                idParaEnviar = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)))
+                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+            }
+
+            await fetch(`${rota}/verify`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ email, credential: { id: idParaEnviar } }) 
+            });
+            
+            if (tipo === 'cadastro') {
+                document.getElementById('email').value = "";
+                msg("Conta e Passkey criadas com sucesso!", "#10b981");
+            } else {
+                window.location.href = '/dashboard.html';
+            }
+        } catch (err) { 
+            msg("Falha: " + err.message, "var(--error)"); 
+        }
+    }
+</script>
+</body>
+</html>
