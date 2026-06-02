@@ -33,5 +33,3 @@ Para garantir a segurança sem o uso de senhas, a aplicação utiliza dois conce
 ## Pré-requisitos
 - Ambiente: node.js
 - Biblioteca: @simplewebauthn/server
-
-## Passos
